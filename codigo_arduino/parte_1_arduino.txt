@@ -1,0 +1,188 @@
+#define B 12
+#define A 11
+#define F 10
+#define G 9
+#define E 8
+#define D 7
+#define C 6
+#define SIGUIENTE 3
+#define ATRAS 4
+#define RESET 5
+#define UNIDAD A0
+#define DECENA A1
+
+
+void setup()
+{
+  pinMode(SIGUIENTE , INPUT_PULLUP);
+  pinMode(ATRAS , INPUT_PULLUP);
+  pinMode(RESET , INPUT_PULLUP);
+  pinMode(B, OUTPUT); 
+  pinMode(A, OUTPUT);
+  pinMode(F, OUTPUT); 
+  pinMode(G , OUTPUT); 
+  pinMode(E , OUTPUT); 
+  pinMode(D , OUTPUT); 
+  pinMode(C , OUTPUT);
+  pinMode(UNIDAD , OUTPUT);
+  pinMode(DECENA , OUTPUT);
+  
+  Serial.begin(9600);  
+}
+
+int pulsor_anterior_sig = 1;
+int pulsor_anterior_atras = 1;
+int pulsor_anterior_reset = 1;
+int enteros = 0;
+int numero = 0;
+int decenas = 0;
+
+
+void loop()
+{
+  
+  numero = pulsadores(numero);
+  
+  enteros = numero % 10;
+  decenas = numero / 10;
+  
+  prender_visualizador();
+
+}
+
+void mostrar_numero(int numero)
+{
+ apagar();
+ switch(numero)
+  {   
+  case 0:
+  digitalWrite(A , HIGH);
+  digitalWrite(B , HIGH);
+  digitalWrite(C , HIGH);
+  digitalWrite(D , HIGH);
+  digitalWrite(E , HIGH);
+  digitalWrite(F , HIGH);
+    break;
+  case 1:
+  digitalWrite(B , HIGH);
+  digitalWrite(C , HIGH);
+	break;
+  case 2:
+  digitalWrite(A , HIGH);
+  digitalWrite(B , HIGH);
+  digitalWrite(D , HIGH);
+  digitalWrite(E , HIGH);
+  digitalWrite(G , HIGH);
+   break;
+  case 3:
+  digitalWrite(A , HIGH);
+  digitalWrite(B , HIGH);
+  digitalWrite(C , HIGH);
+  digitalWrite(D , HIGH);
+  digitalWrite(G , HIGH);
+  	break;
+  case 4:
+  digitalWrite(B , HIGH);
+  digitalWrite(C , HIGH);
+  digitalWrite(F , HIGH);
+  digitalWrite(G , HIGH);
+   	break;
+  case 5:
+  digitalWrite(A , HIGH);
+  digitalWrite(C , HIGH);
+  digitalWrite(D , HIGH);
+  digitalWrite(F , HIGH);
+  digitalWrite(G , HIGH);
+  	break;
+  case 6:
+  digitalWrite(A , HIGH);
+  digitalWrite(C , HIGH);
+  digitalWrite(D , HIGH);
+  digitalWrite(E , HIGH);
+  digitalWrite(F , HIGH);
+  digitalWrite(G , HIGH);
+   break;
+  case 7:
+  digitalWrite(A , HIGH);
+  digitalWrite(B , HIGH);
+  digitalWrite(C , HIGH);
+	break;
+  case 8:
+  digitalWrite(A , HIGH);
+  digitalWrite(B , HIGH);
+  digitalWrite(C , HIGH);
+  digitalWrite(D , HIGH);
+  digitalWrite(E , HIGH);
+  digitalWrite(F , HIGH);
+  digitalWrite(G , HIGH);
+  	break;
+  case 9:
+  digitalWrite(A , HIGH);
+  digitalWrite(B , HIGH);
+  digitalWrite(C , HIGH);
+  digitalWrite(F , HIGH);
+  digitalWrite(G , HIGH); 
+   break;
+  }  
+}
+    
+int pulsadores(int numero)
+{	
+ 
+  int pulsor_siguiente = digitalRead(SIGUIENTE);
+  int pulsor_atras = digitalRead(ATRAS);
+  int pulsor_reset = digitalRead(RESET);
+    
+  if(pulsor_siguiente == 0 && pulsor_siguiente != pulsor_anterior_sig){
+     pulsor_anterior_sig = pulsor_siguiente;
+    return numero += 1;
+  }
+  pulsor_anterior_sig = pulsor_siguiente;
+  if(pulsor_atras == 0 && pulsor_atras != pulsor_anterior_atras){
+    pulsor_anterior_atras = pulsor_atras;
+    return numero -=1;
+  }
+  pulsor_anterior_atras = pulsor_atras;
+  
+  if(pulsor_reset == 0 && pulsor_reset != pulsor_anterior_reset){
+    pulsor_anterior_reset = pulsor_reset;
+    return numero = 0;
+  }
+  pulsor_anterior_reset = pulsor_reset;
+  
+  if (numero < 0){
+   return numero = 99;
+  }
+  else if(numero > 99){
+    return numero = 0 ;
+  }
+} 
+void apagar()
+{
+  digitalWrite(A , LOW);
+  digitalWrite(B , LOW);
+  digitalWrite(C , LOW);
+  digitalWrite(D , LOW);
+  digitalWrite(E , LOW);
+  digitalWrite(F , LOW);
+  digitalWrite(G , LOW);
+}
+
+void prender_visualizador()
+{	
+	digitalWrite(UNIDAD , HIGH);
+    digitalWrite(DECENA , HIGH);
+  	
+	mostrar_numero(enteros);
+    digitalWrite(UNIDAD , LOW);
+  	delay(10);
+    digitalWrite(UNIDAD , HIGH);
+  
+  	mostrar_numero(decenas);
+	digitalWrite(DECENA , LOW);
+	delay(10);
+    digitalWrite(DECENA , HIGH);   
+}
+  
+  
+  
