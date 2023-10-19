@@ -1,0 +1,245 @@
+#define B 12
+#define A 11
+#define F 10
+#define G 9
+#define E 8
+#define D 7
+#define C 6
+#define SIGUIENTE 3
+#define RESET 5
+#define FUENTE_D A1
+#define FUENTE_U A2
+#define SWITCH 2
+#define SENSOR A4
+#define LED_ROJO 4
+#define LED_VERDE A5
+#define LED_AMARILLO A3
+#define DIODO A0
+int pin_motor = 13;
+
+
+void setup()
+{
+  pinMode(SIGUIENTE, INPUT_PULLUP);
+  pinMode(RESET, INPUT_PULLUP);
+  pinMode(A, OUTPUT);
+  pinMode(B, OUTPUT);
+  pinMode(C, OUTPUT);
+  pinMode(D, OUTPUT);
+  pinMode(E, OUTPUT);
+  pinMode(F, OUTPUT);
+  pinMode(G, OUTPUT);
+  pinMode(FUENTE_U, OUTPUT);
+  pinMode(FUENTE_D, OUTPUT);
+  pinMode(SWITCH, INPUT_PULLUP);
+  pinMode(SENSOR, INPUT);
+  pinMode(DIODO , INPUT);
+  pinMode(LED_ROJO , OUTPUT);
+  pinMode(LED_AMARILLO , OUTPUT);
+  pinMode(LED_VERDE , OUTPUT);
+  Serial.begin(9600);
+}
+
+int pulsor_anterior_sig= 0;
+int pulsor_anterior_reset = 0;
+int numero = 0;
+int decena = 0;
+int unidad = 0;
+int contador = 0;
+
+
+void loop()
+{
+  numero = pulsadores(numero); //ACCIONA LOS PULSADORES SIGUIENTE|RESET
+  decena = numero / 10;  
+  unidad = numero % 10; 
+  prender_visualizador(); //PRENDE LOS VISUALIZADORES CONSIGUIENDO LA MULTIPLEXACION
+ 
+  int estado_switch = digitalRead(SWITCH);
+  
+  int mapeado = mapeado_temperatura(SENSOR); //FUNCION PARA MAPEAR SENSOR TEMPERATURA
+
+  if (estado_switch == 0 && mapeado > 30 && numero >= 10){
+    analogWrite(pin_motor,255);}
+  else{								//PRENDE Y APAGA EL MOTOR SI SWITCH ESTA EN 1|
+    analogWrite(pin_motor,0);} 	// TEMPERATURA MAYOR A 30|NUMERO >= 10
+  
+	int lectura_diodo = analogRead(DIODO);
+  Serial.println(lectura_diodo);		// el diodo retorna valores de 55 a 1023
+  	prender_leds(lectura_diodo);  // RECIBE LOS DATOS DEL DIODO Y CONUNA FUNCION
+} 										// PRENDE LOS LED CORRESPONDIENTES
+
+void mostrar_numero(int numero)	// FUNCION PARA PRENDER LOS SEGMENTOS DEPENDIENDO DE EL NUMERO
+{
+  apagar();  	// APAGA TODOS LOS SEGMENTOS DEL VISUALIZADOR
+  switch(numero)
+  {	
+    case 0:
+      digitalWrite(A, HIGH);
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(D, HIGH);		
+      digitalWrite(E, HIGH);
+      digitalWrite(F, HIGH);
+      break;
+    case 1:
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      break;
+    case 2:
+      digitalWrite(A, HIGH);
+      digitalWrite(B, HIGH);
+      digitalWrite(D, HIGH);
+      digitalWrite(E, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+    case 3:
+      digitalWrite(A, HIGH);
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(D, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+    case 4:
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(F, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+    case 5:
+      digitalWrite(A, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(D, HIGH);
+      digitalWrite(F, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+    case 6:
+      digitalWrite(A, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(D, HIGH);
+      digitalWrite(E, HIGH);
+      digitalWrite(F, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+    case 7:
+      digitalWrite(A, HIGH);
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      break;
+    case 8:
+      digitalWrite(A, HIGH);
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(D, HIGH);
+      digitalWrite(E, HIGH);
+      digitalWrite(F, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+    case 9:
+      digitalWrite(A, HIGH);
+      digitalWrite(B, HIGH);
+      digitalWrite(C, HIGH);
+      digitalWrite(F, HIGH);
+      digitalWrite(G, HIGH);
+      break;
+  }
+}
+
+int define_primo(int numero)	// FUNCION QUE RECIBE UN NUMERO Y RETORNA EL SIGUIENTE NUMERO PRIMO 
+{
+  numero +=1;
+  while (true)
+  {	
+    contador = 0;
+  	if (numero == 1) {
+    	numero +=1;}
+  	for (int i = 2; i < numero; i++) {
+    	if (numero % i == 0) {
+     	  numero +=1;
+          contador +=1;}
+    	}
+    if (contador == 0){
+      break;}
+  }
+ return numero;
+}
+      
+void apagar(void)
+{
+  digitalWrite(A, LOW);    // APAGA LOS 7 SEGMENTOS DEL VISUALIZADOR
+  digitalWrite(B, LOW);
+  digitalWrite(C, LOW);
+  digitalWrite(D, LOW);
+  digitalWrite(E, LOW);
+  digitalWrite(F, LOW);
+  digitalWrite(G, LOW);
+}
+
+int mapeado_temperatura(int SENSOR)
+{
+  int lectura_temp = analogRead(SENSOR);
+  int conversion = map(lectura_temp,20,358,-40,125); // FUNCION MAPEA EL SENSOR DE TEMPERATURA
+  return conversion; 									//RETORNA SU CONVERSION -40 A 125
+}
+
+void prender_visualizador(void)
+{	
+	digitalWrite(FUENTE_U , HIGH);
+    digitalWrite(FUENTE_D, HIGH);		// FUNCION PARA LOS DISPLAYS| HACE LA MULTIPLEXACION
+  										//APAGANDO Y PRENDIENDO LOS DISPLAYS EN MOMENTOS PRECISOS
+	mostrar_numero(unidad);
+    digitalWrite(FUENTE_U , LOW);
+  	delay(10);
+    digitalWrite(FUENTE_U , HIGH);
+  
+  	mostrar_numero(decena);
+	digitalWrite(FUENTE_D , LOW);
+	delay(10);
+    digitalWrite(FUENTE_D, HIGH);   
+}
+
+int pulsadores(int numero)
+{	
+ int pulsor_siguiente = digitalRead(SIGUIENTE);   //FUNCION RECIBE UN NUMERO Y JUNTO CON LOS PULSADORES CALCULA SUMA
+ int pulsor_reset = digitalRead(RESET);			//O RESET DEL MISMO NUMERO Y LO RETORNA
+ int estado_switch = digitalRead(SWITCH); 		
+  
+  if(pulsor_siguiente == 0 && pulsor_siguiente != pulsor_anterior_sig)	//ESTA FUNCION TAMBIEN CONSIGUE RESOLVER
+  {  																//EL PROBLEMA DEL ANTIRREBOTE DE LOS BOTONES
+     pulsor_anterior_sig = pulsor_siguiente;
+    if (estado_switch == 1){
+      return define_primo(numero);}
+    else{											
+      return numero +=1;}
+  }
+  pulsor_anterior_sig = pulsor_siguiente;
+  
+  if(pulsor_reset == 0 && pulsor_reset != pulsor_anterior_reset)
+  {  
+    pulsor_anterior_reset = pulsor_reset;
+   	return numero = 0; 
+  }
+  pulsor_anterior_reset = pulsor_reset;
+ 	
+  if (numero < 0){
+   return numero = 99;}
+  
+  else if(numero > 99){
+    return numero = 0 ;}
+} 
+
+void prender_leds(int SENSOR)   // ESTA FUNCION PRENDE LOS LED DEPENDIENDO DE LA POTENCIA
+{
+  if (SENSOR >= 300){
+    digitalWrite(LED_ROJO ,HIGH ); }		
+  else{
+    digitalWrite(LED_ROJO , LOW);}
+  if (SENSOR >= 550){
+    digitalWrite(LED_AMARILLO ,HIGH );}
+  else{
+    digitalWrite(LED_AMARILLO , LOW);}
+  if (SENSOR == 1023){
+    digitalWrite(LED_VERDE ,HIGH );}
+  else{
+    digitalWrite(LED_VERDE ,LOW );}
+}
